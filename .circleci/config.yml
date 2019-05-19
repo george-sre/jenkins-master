@@ -8,5 +8,5 @@ jobs:
           name: Build Image and Push
           command: |            
             docker login --username=$DOCKER_USER --password=$DOCKER_PASS
-            docker build -t georgedriver/jenkins-master:latest .
-            docker push georgedriver/jenkins-master:latest
+            docker build -t georgesre/jenkins-master:latest .
+            docker push georgesre/jenkins-master:latest
