@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build Image and Push
+          command: |            
+            docker login --username=$DOCKER_USER --password=$DOCKER_PASS
+            docker build -t georgedriver/jenkins-master:latest .
+            docker push georgedriver/jenkins-master:latest

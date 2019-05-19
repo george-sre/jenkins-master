@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: jenkins
+  name: jenkins
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+        - name: jenkins
+          image: georgedriver/jenkins-master:latest
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+            requests:
+              cpu: "0.5"
+              memory: 500Mi
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: disk-pvc
+          env:
+            - name: SERVICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins.service-secrets
+                  key: github_token
+          ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+              - containerPort: 50000
+                name: jnlp
+                protocol: TCP
+      volumes:
+        - name: disk-pvc
+          persistentVolumeClaim:
+            claimName: jenkins.pvc-disk

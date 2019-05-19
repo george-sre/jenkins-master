@@ -1,0 +1,109 @@
+// ==== Let's configure label of master
+import jenkins.*
+import hudson.model.Node.Mode
+
+Jenkins jenkins = Jenkins.getInstance()
+jenkins.setLabelString('do-not-use-master')
+jenkins.setMode(Mode.EXCLUSIVE)
+println 'Configured label of master.'
+
+// ==== Let's remove all the init credential
+import com.cloudbees.plugins.credentials.domains.Domain
+def credentialsStore = jenkins.model.Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
+allCreds = credentialsStore.getCredentials(Domain.global())
+allCreds.each{
+    if (it.id == "github_token_string_cred") {
+        credentialsStore.removeCredentials(Domain.global(), it)
+    }
+    if (it.id == "github_token_userpass_cred") {
+        credentialsStore.removeCredentials(Domain.global(), it)
+    }
+    if (it.id == "vault_token") {
+        credentialsStore.removeCredentials(Domain.global(), it)
+    }
+    if (it.id == "jenkins_config_as_code") {
+        credentialsStore.removeCredentials(Domain.global(), it)
+    }
+}
+
+// ==== Let's setup the very initial github-token for webhook =====
+import jenkins.model.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.plugins.credentials.impl.*
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.*
+import org.jenkinsci.plugins.plaincredentials.*
+import org.jenkinsci.plugins.plaincredentials.impl.*
+import hudson.util.Secret
+import hudson.plugins.sshslaves.*
+import org.apache.commons.fileupload.* 
+import org.apache.commons.fileupload.disk.*
+import java.nio.file.Files
+import com.datapipe.jenkins.vault.credentials.VaultTokenCredential;
+
+domain = Domain.global()
+store = Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
+
+String fileContentsGithubToken = System.getenv('GITHUB_TOKEN') ?: 'DUMMY_GITHUB_TOKEN'
+String fileContentsVaultToken = System.getenv('VAULT_TOKEN') ?: 'DUMMY_VAULT_TOKEN'
+
+secretTextGithub = new StringCredentialsImpl( CredentialsScope.GLOBAL, "github_token_string_cred", "github_token_string_cred", Secret.fromString(fileContentsGithubToken))
+secretUserPassGithub = new UsernamePasswordCredentialsImpl( CredentialsScope.GLOBAL, "github_token_userpass_cred", "github_token_userpass_cred", "georgedriver", fileContentsGithubToken)
+secretTextVault = new VaultTokenCredential(CredentialsScope.GLOBAL, "vault_token", "vault_token", Secret.fromString(fileContentsVaultToken));
+
+store.addCredentials(domain, secretTextGithub)
+store.addCredentials(domain, secretUserPassGithub)
+store.addCredentials(domain, secretTextVault)
+println 'Configured Credentials: vault_token vault_token.'
+
+// ==== Let's config github server
+import com.cloudbees.plugins.credentials.CredentialsScope
+import com.cloudbees.plugins.credentials.domains.Domain
+import hudson.util.Secret
+import jenkins.model.JenkinsLocationConfiguration
+import org.jenkinsci.plugins.github.GitHubPlugin
+import org.jenkinsci.plugins.github.config.GitHubPluginConfig
+import org.jenkinsci.plugins.github.config.GitHubServerConfig
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl
+
+// configure github plugin
+GitHubPluginConfig pluginConfig = GitHubPlugin.configuration()
+GitHubServerConfig serverConfig = new GitHubServerConfig('github_token_string_cred')
+serverConfig.name = "My GitHub.com"
+serverConfig.manageHooks = true
+
+pluginConfig.setConfigs([serverConfig])
+pluginConfig.save()
+println 'Configured GitHub plugin.'
+
+// ===== Let's configure Vault
+// https://github.com/buildit/jenkins-startup-scripts
+import com.datapipe.jenkins.vault.configuration.GlobalVaultConfiguration
+import com.datapipe.jenkins.vault.configuration.VaultConfiguration
+import jenkins.model.GlobalConfiguration
+
+String vault_addr = System.getenv('VAULT_ADDR') ?: 'DUMMY_VAULT_ADDR'
+
+GlobalVaultConfiguration globalConfig = GlobalConfiguration.all().get(GlobalVaultConfiguration.class)
+globalConfig.setConfiguration(new VaultConfiguration(vault_addr, 'vault_token'))
+
+globalConfig.save()
+println 'Configured Vault plugin.'
+
+// ===== Let's configure Datadog
+import jenkins.model.*
+import org.datadog.jenkins.plugins.datadog.DatadogBuildListener
+
+String dd_api_key = System.getenv('DD_API_KEY') ?: 'DUMMY_DD_API_KEY'
+String service_namespace = System.getenv('SERVICE_NAMESPACE') ?: 'DUMMY_SERVICE_NAMESPACE'
+
+def j = Jenkins.getInstance()
+def d = j.getDescriptor("org.datadog.jenkins.plugins.datadog.DatadogBuildListener")
+d.setHostname('tooling-'+ service_namespace + '-jenkins')
+d.setTagNode(true)
+d.setApiKey(dd_api_key)
+d.setBlacklist('job1,job2')
+d.setGlobalJobTags('region=china\n(.*?)/(.*?)/.*, mission:$1, project:$2')
+d.save()
+println 'Configured datadog plugin.'

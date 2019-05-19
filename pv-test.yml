@@ -1,0 +1,26 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: alicloud-disk-ssd-shanghai-f
+provisioner: alicloud/disk
+reclaimPolicy: Retain
+parameters:
+  type: cloud_ssd
+  regionid: cn-shanghai
+  zoneid: cn-shanghai-f
+  fstype: "ext4"
+  readonly: "false"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: jenkins.pvc-disk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: alicloud-disk-ssd-shanghai-f
+  resources:
+    requests:
+      storage: 20Gi
