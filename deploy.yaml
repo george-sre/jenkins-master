@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: jenkins
-          image: georgedriver/jenkins-master:latest
+          image: georgesre/jenkins-master:latest
           resources:
             limits:
               cpu: "2"
