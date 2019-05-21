@@ -38,11 +38,11 @@ RUN apt-get update && apt-get install -y maven vim
 RUN update-ca-certificates --fresh
 
 # Add vault + consul-template descriped in https://ifritltd.com/2018/03/18/advanced-jenkins-setup-creating-jenkins-configuration-as-code-and-applying-changes-without-downtime-with-java-groovy-docker-vault-consul-template-and-jenkins-job/
-RUN curl https://raw.githubusercontent.com/georgedriver/devops-tools/master/vault_1.0.3_linux_amd64.zip -o vault_1.0.3_linux_amd64.zip
+RUN curl https://raw.githubusercontent.com/george-sre/devops-tools/master/vault_1.0.3_linux_amd64.zip -o vault_1.0.3_linux_amd64.zip
 
 RUN unzip vault_1.0.3_linux_amd64.zip -d /usr/local/bin/ && rm -fr vault_1.0.3_linux_amd64.zip
 
-RUN curl https://raw.githubusercontent.com/georgedriver/devops-tools/master/consul-template?raw=true -o consul-template
+RUN curl https://raw.githubusercontent.com/george-sre/devops-tools/master/consul-template?raw=true -o consul-template
 
 RUN mv consul-template /usr/local/bin/ && rm -fr consul-template
 

@@ -49,7 +49,7 @@ String fileContentsGithubToken = System.getenv('GITHUB_TOKEN') ?: 'DUMMY_GITHUB_
 String fileContentsVaultToken = System.getenv('VAULT_TOKEN') ?: 'DUMMY_VAULT_TOKEN'
 
 secretTextGithub = new StringCredentialsImpl( CredentialsScope.GLOBAL, "github_token_string_cred", "github_token_string_cred", Secret.fromString(fileContentsGithubToken))
-secretUserPassGithub = new UsernamePasswordCredentialsImpl( CredentialsScope.GLOBAL, "github_token_userpass_cred", "github_token_userpass_cred", "georgedriver", fileContentsGithubToken)
+secretUserPassGithub = new UsernamePasswordCredentialsImpl( CredentialsScope.GLOBAL, "github_token_userpass_cred", "github_token_userpass_cred", "george-sre", fileContentsGithubToken)
 secretTextVault = new VaultTokenCredential(CredentialsScope.GLOBAL, "vault_token", "vault_token", Secret.fromString(fileContentsVaultToken));
 
 store.addCredentials(domain, secretTextGithub)
