@@ -7,6 +7,15 @@ ENV JAVA_OPTS='-Duser.timezone=Asia/Shanghai -Dpermissive-script-security.enable
 USER root
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
+# docker のバイナリをinstall
+RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz
+RUN tar -xvf docker-18.03.1-ce.tgz
+RUN mv docker/* /usr/bin/
+
+# jenkins userでもdockerが使えるようにする
+RUN groupadd -o -g ${DOCKER_GROUP_GID} docker
+RUN usermod -g docker jenkins
+
 # Plugins
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
@@ -18,12 +27,6 @@ COPY hpi/* /usr/share/jenkins/ref/plugins/
 USER root
 RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list
 RUN sed -i "s@http://security.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list
-
-ENV DOCKERVERSION=18.03.1-ce
-RUN curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKERVERSION}.tgz \
-  && tar xzvf docker-${DOCKERVERSION}.tgz --strip 1 \
-                 -C /usr/local/bin docker/docker \
-  && rm docker-${DOCKERVERSION}.tgz
 
 RUN apt-get update && apt-get install -y maven vim
 
