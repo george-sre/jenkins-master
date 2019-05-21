@@ -3,6 +3,11 @@ FROM jenkins/jenkins:2.150.3
 # set timezone for Java runtime arguments #TODO: FIXME security vulnerability
 ENV JAVA_OPTS='-Duser.timezone=Asia/Shanghai -Dpermissive-script-security.enabled=no_security'
 
+# docker daemonの動いているホストのGIDを指定する
+# docker run -v /var/run/docker.sock:/var/run/docker.sock で
+# ホストのdocker daemonを共有する前提
+ENV DOCKER_GROUP_GID 501
+
 # set timezone for OS by root
 USER root
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
